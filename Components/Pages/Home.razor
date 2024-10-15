@@ -1,0 +1,31 @@
+﻿@page "/Home"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize]
+
+<h1>Hello, world!</h1>
+
+@if (IsAuthenticated)
+{
+    <AuthorizeView>
+      <p> Welcome, @context.User.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Name))?.Value you are logged in!</p>
+    </AuthorizeView>
+}
+else
+{
+    <p>Please log in to access this page.</p>
+}
+
+@code {
+    private bool IsAuthenticated { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        IsAuthenticated = authState.User.Identity.IsAuthenticated;
+
+    }
+}

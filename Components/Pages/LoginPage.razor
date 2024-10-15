@@ -1,0 +1,64 @@
+﻿@page "/"
+@page "/login"
+
+@layout Layout.LoginLayout
+@using Microsoft.AspNetCore.Components.Authorization;
+@using System.Text
+@using System.IdentityModel.Tokens.Jwt
+@using Microsoft.Identity.Client
+@inject NavigationManager Navigation
+@inject CustomAuthenticationStateProvider AuthStateProvider
+
+<main class="content px-4 homepage">
+    <div class="login-container">
+        <h1 class="login-title">Welcome to Your App</h1>
+        <p class="login-subtitle">Please login to continue.</p>
+
+        <button class="login-button" @onclick="AuthenticateUser">
+            Login
+        </button>
+
+        <div class="error-message" visible="@(!messageHidden)">
+            <p>@message</p>
+        </div>
+    </div>
+</main>
+
+@code {
+    public bool messageHidden = true; // Flag to control visibility of error message
+    private string message { get; set; } // Stores the error message
+
+    // Handles the login button click event
+    private async Task AuthenticateUser()
+    {
+        try
+        {
+            // Create an instance of the AuthService
+            var authService = new AuthService();
+
+            // Attempt to acquire a token
+            var result = await authService.LoginAsync(CancellationToken.None);
+
+            // Check if login was successful
+            var token = result?.AccessToken;
+            if (token != null)
+            {
+                // Token received, login successful
+                await AuthStateProvider.AuthenticateLogin(token); // Grant authorization
+                Navigation.NavigateTo("/Home"); // Navigate to home page
+            }
+            else
+            {
+                // Login failed, display error message
+                messageHidden = false;
+                message = "Invalid login attempt, please correct and try again.";
+            }
+        }
+        catch (MsalClientException ex)
+        {
+            // Handle MSAL-specific errors
+            messageHidden = false;
+            message = $"Error: {ex.Message}";
+        }
+    }
+}
